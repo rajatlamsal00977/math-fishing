@@ -26,7 +26,7 @@ Goal: by the end of this phase, one full catch — sail, cast, solve, reel in,
 fish removed — works end to end, even if everything looks like colored
 rectangles.
 
-- [ ] 1.1 `PondScene`: bounded pond background (solid color/tile), boat placeholder rectangle, WASD/arrow movement, camera bounded to pond edges
+- [x] 1.1 `PondScene`: bounded pond background (solid color/tile), boat placeholder rectangle, WASD/arrow movement, camera bounded to pond edges
 - [ ] 1.2 Underwater layer: 4–6 placeholder fish sprites (colored circles) swimming in a gentle patrol pattern below the water line
 - [ ] 1.3 Casting: press SPACE near a fish → line-drop visual → bite after 1–3s (or auto-retract after 5s if nothing nearby)
 - [ ] 1.4 `ReelingScene` overlay: wooden-panel-placeholder, one **hardcoded** math problem, on-screen number pad (0–9, backspace, submit)

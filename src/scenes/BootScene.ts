@@ -25,5 +25,7 @@ export class BootScene extends Phaser.Scene {
         color: "#cfe8d8",
       })
       .setOrigin(0.5);
+
+    this.time.delayedCall(800, () => this.scene.start("PondScene"));
   }
 }
