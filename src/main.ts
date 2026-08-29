@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { BootScene } from "./scenes/BootScene";
 import { PondScene } from "./scenes/PondScene";
+import { ReelingScene } from "./scenes/ReelingScene";
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -18,7 +19,7 @@ const config: Phaser.Types.Core.GameConfig = {
       gravity: { x: 0, y: 0 },
     },
   },
-  scene: [BootScene, PondScene],
+  scene: [BootScene, PondScene, ReelingScene],
 };
 
 new Phaser.Game(config);

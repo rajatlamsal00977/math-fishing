@@ -169,7 +169,12 @@ export class PondScene extends Phaser.Scene {
       this.tweens.add({ targets: this.bobber, scale: 1.6, yoyo: true, duration: 150, repeat: 2 });
     }
 
-    this.time.delayedCall(900, () => this.endCast());
+    this.cameras.main.zoomTo(1.15, 400);
+
+    this.time.delayedCall(500, () => {
+      this.scene.launch("ReelingScene");
+      this.scene.pause();
+    });
   }
 
   private onCastTimeout(): void {
@@ -178,7 +183,7 @@ export class PondScene extends Phaser.Scene {
     this.time.delayedCall(700, () => this.endCast());
   }
 
-  private endCast(): void {
+  endCast(): void {
     this.castLine?.destroy();
     this.bobber?.destroy();
     this.castLine = undefined;
@@ -187,5 +192,6 @@ export class PondScene extends Phaser.Scene {
     this.timeoutTimer = undefined;
     this.isCasting = false;
     this.statusText.setText("");
+    this.cameras.main.zoomTo(1, 400);
   }
 }
