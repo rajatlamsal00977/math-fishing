@@ -16,6 +16,7 @@ export class Fish {
   private readonly bounds: Phaser.Geom.Rectangle;
   private readonly bobPhase: number;
   private idleUntil = 0;
+  private active = true;
 
   constructor(scene: Phaser.Scene, x: number, y: number, config: FishConfig) {
     this.speed = config.speed;
@@ -36,8 +37,23 @@ export class Fish {
     return this.gameObject.y;
   }
 
+  /** Hides the fish after it's caught; it stops patrolling until `respawnAt`. */
+  hide(): void {
+    this.active = false;
+    this.gameObject.setVisible(false);
+  }
+
+  respawnAt(x: number, y: number): void {
+    this.gameObject.setPosition(x, y);
+    this.gameObject.setScale(1);
+    this.gameObject.setAlpha(0.9);
+    this.gameObject.setVisible(true);
+    this.active = true;
+    this.target = this.pickNewTarget();
+  }
+
   update(time: number, delta: number): void {
-    if (time < this.idleUntil) return;
+    if (!this.active || time < this.idleUntil) return;
 
     const dx = this.target.x - this.gameObject.x;
     const dy = this.target.y - this.gameObject.y;

@@ -32,8 +32,8 @@ rectangles.
 - [x] 1.4 `ReelingScene` overlay: wooden-panel-placeholder, one **hardcoded** math problem, on-screen number pad (0–9, backspace, submit)
 - [x] 1.5 Tension bar: rises over ~15s idle, drops on correct answer, spikes on wrong answer
 - [x] 1.6 Win/lose logic: 3 correct → caught, 3 wrong (or full tension) → escapes with "Nice try!" — return to `PondScene` either way
-- [ ] 1.7 Catch animation (can be a simple tween/flash) → fish removed from pond → respawns nearby after a delay
-- [ ] **Milestone 1**: play a full loop start to finish with placeholder art + one hardcoded problem. Commit + tag `milestone-1-loop`.
+- [x] 1.7 Catch animation (can be a simple tween/flash) → fish removed from pond → respawns nearby after a delay
+- [x] **Milestone 1**: play a full loop start to finish with placeholder art + one hardcoded problem. Commit + tag `milestone-1-loop`.
 
 ## Phase 2 — Make it real (content + AI)
 

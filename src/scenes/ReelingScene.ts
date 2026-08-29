@@ -116,7 +116,7 @@ export class ReelingScene extends Phaser.Scene {
     this.drawTensionBar();
 
     if (this.tension >= TENSION_MAX) {
-      this.resolve(ESCAPE_MESSAGE);
+      this.resolve(ESCAPE_MESSAGE, false);
     }
   }
 
@@ -219,7 +219,7 @@ export class ReelingScene extends Phaser.Scene {
       this.feedbackText.setText("Correct!");
 
       if (this.correctCount >= CORRECT_TO_CATCH) {
-        this.time.delayedCall(800, () => this.resolve("Caught it!"));
+        this.time.delayedCall(800, () => this.resolve("Caught it!", true));
       } else {
         this.time.delayedCall(800, () => this.resetForNextAttempt());
       }
@@ -229,7 +229,7 @@ export class ReelingScene extends Phaser.Scene {
       this.feedbackText.setText("Not quite — try again!");
 
       if (this.wrongCount >= WRONG_TO_ESCAPE) {
-        this.time.delayedCall(600, () => this.resolve(ESCAPE_MESSAGE));
+        this.time.delayedCall(600, () => this.resolve(ESCAPE_MESSAGE, false));
       } else {
         this.time.delayedCall(600, () => this.resetForNextAttempt());
       }
@@ -242,17 +242,18 @@ export class ReelingScene extends Phaser.Scene {
     this.feedbackText.setText("");
   }
 
-  private resolve(message: string): void {
+  private resolve(message: string, won: boolean): void {
     if (this.isResolved) return;
     this.isResolved = true;
     this.feedbackText.setText(message);
-    this.time.delayedCall(1000, () => this.returnToPond());
+    this.time.delayedCall(1000, () => this.returnToPond(won));
   }
 
-  private returnToPond(): void {
+  private returnToPond(won: boolean): void {
     const pond = this.scene.get("PondScene") as PondScene;
     this.scene.stop();
     this.scene.resume("PondScene");
+    if (won) pond.catchFish();
     pond.endCast();
   }
 }

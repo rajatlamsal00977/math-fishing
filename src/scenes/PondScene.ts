@@ -13,6 +13,8 @@ const CAST_RANGE = 100;
 const CAST_MIN_BITE_MS = 1000;
 const CAST_MAX_BITE_MS = 3000;
 const CAST_TIMEOUT_MS = 5000;
+const CATCH_ANIMATION_MS = 500;
+const FISH_RESPAWN_DELAY_MS = 3000;
 
 // Placeholder colors/sizes standing in for real species art (Phase 2.1).
 // Larger radius + brighter color loosely hints at higher difficulty.
@@ -30,6 +32,7 @@ export class PondScene extends Phaser.Scene {
   private wasd!: { [key: string]: Phaser.Input.Keyboard.Key };
   private spaceKey!: Phaser.Input.Keyboard.Key;
   private fish: Fish[] = [];
+  private patrolBounds!: Phaser.Geom.Rectangle;
   private statusText!: Phaser.GameObjects.Text;
 
   private isCasting = false;
@@ -37,6 +40,7 @@ export class PondScene extends Phaser.Scene {
   private bobber?: Phaser.GameObjects.Arc;
   private biteTimer?: Phaser.Time.TimerEvent;
   private timeoutTimer?: Phaser.Time.TimerEvent;
+  private targetFish: Fish | null = null;
 
   constructor() {
     super("PondScene");
@@ -56,16 +60,16 @@ export class PondScene extends Phaser.Scene {
     this.add.rectangle(SHORE_THICKNESS / 2, POND_HEIGHT / 2, SHORE_THICKNESS, POND_HEIGHT, shoreColor);
     this.add.rectangle(POND_WIDTH - SHORE_THICKNESS / 2, POND_HEIGHT / 2, SHORE_THICKNESS, POND_HEIGHT, shoreColor);
 
-    const patrolBounds = new Phaser.Geom.Rectangle(
+    this.patrolBounds = new Phaser.Geom.Rectangle(
       SHORE_THICKNESS + FISH_PATROL_PADDING,
       SHORE_THICKNESS + FISH_PATROL_PADDING,
       POND_WIDTH - 2 * (SHORE_THICKNESS + FISH_PATROL_PADDING),
       POND_HEIGHT - 2 * (SHORE_THICKNESS + FISH_PATROL_PADDING),
     );
     this.fish = FISH_PLACEHOLDER_CONFIGS.map((config) => {
-      const x = Phaser.Math.Between(patrolBounds.x, patrolBounds.x + patrolBounds.width);
-      const y = Phaser.Math.Between(patrolBounds.y, patrolBounds.y + patrolBounds.height);
-      return new Fish(this, x, y, { ...config, bounds: patrolBounds });
+      const x = Phaser.Math.Between(this.patrolBounds.x, this.patrolBounds.x + this.patrolBounds.width);
+      const y = Phaser.Math.Between(this.patrolBounds.y, this.patrolBounds.y + this.patrolBounds.height);
+      return new Fish(this, x, y, { ...config, bounds: this.patrolBounds });
     });
 
     const boatTextureKey = "boat-placeholder";
@@ -150,6 +154,7 @@ export class PondScene extends Phaser.Scene {
     const nearbyFish = this.fish.find(
       (f) => Phaser.Math.Distance.Between(bobberX, bobberY, f.x, f.y) <= CAST_RANGE,
     );
+    this.targetFish = nearbyFish ?? null;
 
     this.statusText.setText("Casting...");
 
@@ -193,5 +198,30 @@ export class PondScene extends Phaser.Scene {
     this.isCasting = false;
     this.statusText.setText("");
     this.cameras.main.zoomTo(1, 400);
+  }
+
+  catchFish(): void {
+    const fish = this.targetFish;
+    if (!fish) return;
+
+    this.targetFish = null;
+
+    this.tweens.add({
+      targets: fish.gameObject,
+      scale: 1.6,
+      alpha: 0,
+      duration: CATCH_ANIMATION_MS,
+      ease: "Quad.easeOut",
+      onComplete: () => {
+        fish.hide();
+        this.time.delayedCall(FISH_RESPAWN_DELAY_MS, () => this.respawnFish(fish));
+      },
+    });
+  }
+
+  private respawnFish(fish: Fish): void {
+    const x = Phaser.Math.Between(this.patrolBounds.x, this.patrolBounds.x + this.patrolBounds.width);
+    const y = Phaser.Math.Between(this.patrolBounds.y, this.patrolBounds.y + this.patrolBounds.height);
+    fish.respawnAt(x, y);
   }
 }
