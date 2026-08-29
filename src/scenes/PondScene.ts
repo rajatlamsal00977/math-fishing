@@ -69,7 +69,6 @@ export class PondScene extends Phaser.Scene {
 
     this.boat = this.physics.add.sprite(POND_WIDTH / 2, POND_HEIGHT / 2, boatTextureKey);
     this.boat.setCollideWorldBounds(true);
-    this.boat.setDamping(true);
     this.boat.setDrag(BOAT_DRAG);
     this.boat.setMaxVelocity(BOAT_MAX_SPEED);
     this.boat.setDepth(1);
