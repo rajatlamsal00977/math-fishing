@@ -17,7 +17,7 @@ dock shop upgrades → Fish Guide detail view → adaptive spawning. Keep adapti
 - [x] 0.1 `git init`, `.gitignore`, README, PLAN.md, this file
 - [x] 0.2 Vite + TypeScript scaffold, strip boilerplate, confirm `npm run dev` serves
 - [x] 0.3 Add Phaser, minimal `BootScene` rendering "Math Fishing Game" text, confirm build + dev server both work
-- [ ] 0.4 Push to a remote (GitHub or otherwise) once you're ready — currently local-only
+- [x] 0.4 Push to a remote (GitHub or otherwise) once you're ready — currently local-only
 - [ ] 0.5 Deploy the empty Hello scene to Vercel (`vercel` CLI or dashboard import), confirm the public URL loads
 
 ## Phase 1 — Feel the loop (placeholder art, hardcoded problems)
