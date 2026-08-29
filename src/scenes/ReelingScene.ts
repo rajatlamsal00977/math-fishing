@@ -10,6 +10,15 @@ const MAX_ANSWER_LENGTH = 3;
 const BUTTON_SIZE = 64;
 const BUTTON_GAP = 12;
 
+const TENSION_MAX = 100;
+const TENSION_RISE_PER_MS = TENSION_MAX / 15000; // fills in ~15s if left idle
+const TENSION_DROP_ON_CORRECT = 40;
+const TENSION_SPIKE_ON_WRONG = 25;
+const TENSION_BAR_WIDTH = 22;
+const TENSION_BAR_HEIGHT = 300;
+const TENSION_LOW_COLOR = { r: 0x8b, g: 0xc9, b: 0x8a };
+const TENSION_HIGH_COLOR = { r: 0xd0, g: 0x60, b: 0x60 };
+
 type PadKey = { label: string; action: "digit" | "backspace" | "submit"; digit?: number };
 
 const PAD_LAYOUT: PadKey[] = [
@@ -32,11 +41,19 @@ export class ReelingScene extends Phaser.Scene {
   private answerText!: Phaser.GameObjects.Text;
   private feedbackText!: Phaser.GameObjects.Text;
 
+  private tension = 0;
+  private tensionFill!: Phaser.GameObjects.Graphics;
+  private tensionBarX = 0;
+  private tensionBarTop = 0;
+
   constructor() {
     super("ReelingScene");
   }
 
   create(): void {
+    this.answer = "";
+    this.tension = 0;
+
     const { width, height } = this.scale;
     const cx = width / 2;
     const cy = height / 2;
@@ -78,6 +95,51 @@ export class ReelingScene extends Phaser.Scene {
       .setScrollFactor(0);
 
     this.createNumberPad(cx, panelTop + 190);
+    this.createTensionBar(cx + PANEL_WIDTH / 2 - 60, panelTop + 60);
+  }
+
+  update(_time: number, delta: number): void {
+    this.tension = Phaser.Math.Clamp(this.tension + TENSION_RISE_PER_MS * delta, 0, TENSION_MAX);
+    this.drawTensionBar();
+  }
+
+  private createTensionBar(x: number, top: number): void {
+    this.tensionBarX = x;
+    this.tensionBarTop = top;
+
+    this.add
+      .text(x, top - 22, "Tension", {
+        fontFamily: "Georgia, serif",
+        fontSize: "13px",
+        color: "#f4e9d8",
+      })
+      .setOrigin(0.5)
+      .setScrollFactor(0);
+
+    this.add
+      .rectangle(x, top + TENSION_BAR_HEIGHT / 2, TENSION_BAR_WIDTH, TENSION_BAR_HEIGHT, 0x3d2b1a)
+      .setStrokeStyle(2, 0x5c3a1a)
+      .setScrollFactor(0);
+
+    this.tensionFill = this.add.graphics().setScrollFactor(0);
+    this.drawTensionBar();
+  }
+
+  private drawTensionBar(): void {
+    const fillHeight = (this.tension / TENSION_MAX) * TENSION_BAR_HEIGHT;
+    const t = this.tension / TENSION_MAX;
+    const r = Phaser.Math.Linear(TENSION_LOW_COLOR.r, TENSION_HIGH_COLOR.r, t);
+    const g = Phaser.Math.Linear(TENSION_LOW_COLOR.g, TENSION_HIGH_COLOR.g, t);
+    const b = Phaser.Math.Linear(TENSION_LOW_COLOR.b, TENSION_HIGH_COLOR.b, t);
+
+    this.tensionFill.clear();
+    this.tensionFill.fillStyle(Phaser.Display.Color.GetColor(r, g, b), 1);
+    this.tensionFill.fillRect(
+      this.tensionBarX - TENSION_BAR_WIDTH / 2 + 2,
+      this.tensionBarTop + TENSION_BAR_HEIGHT - fillHeight,
+      TENSION_BAR_WIDTH - 4,
+      fillHeight,
+    );
   }
 
   private createNumberPad(centerX: number, top: number): void {
@@ -133,9 +195,11 @@ export class ReelingScene extends Phaser.Scene {
     const isCorrect = Number(this.answer) === HARDCODED_PROBLEM.answer;
 
     if (isCorrect) {
+      this.tension = Phaser.Math.Clamp(this.tension - TENSION_DROP_ON_CORRECT, 0, TENSION_MAX);
       this.feedbackText.setText("Correct!");
       this.time.delayedCall(800, () => this.finish());
     } else {
+      this.tension = Phaser.Math.Clamp(this.tension + TENSION_SPIKE_ON_WRONG, 0, TENSION_MAX);
       this.feedbackText.setText("Not quite — try again!");
       this.time.delayedCall(600, () => {
         this.answer = "";
