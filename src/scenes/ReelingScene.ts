@@ -19,6 +19,10 @@ const TENSION_BAR_HEIGHT = 300;
 const TENSION_LOW_COLOR = { r: 0x8b, g: 0xc9, b: 0x8a };
 const TENSION_HIGH_COLOR = { r: 0xd0, g: 0x60, b: 0x60 };
 
+const CORRECT_TO_CATCH = 3;
+const WRONG_TO_ESCAPE = 3;
+const ESCAPE_MESSAGE = "Nice try! That one got away.";
+
 type PadKey = { label: string; action: "digit" | "backspace" | "submit"; digit?: number };
 
 const PAD_LAYOUT: PadKey[] = [
@@ -46,6 +50,10 @@ export class ReelingScene extends Phaser.Scene {
   private tensionBarX = 0;
   private tensionBarTop = 0;
 
+  private correctCount = 0;
+  private wrongCount = 0;
+  private isResolved = false;
+
   constructor() {
     super("ReelingScene");
   }
@@ -53,6 +61,9 @@ export class ReelingScene extends Phaser.Scene {
   create(): void {
     this.answer = "";
     this.tension = 0;
+    this.correctCount = 0;
+    this.wrongCount = 0;
+    this.isResolved = false;
 
     const { width, height } = this.scale;
     const cx = width / 2;
@@ -99,8 +110,14 @@ export class ReelingScene extends Phaser.Scene {
   }
 
   update(_time: number, delta: number): void {
+    if (this.isResolved) return;
+
     this.tension = Phaser.Math.Clamp(this.tension + TENSION_RISE_PER_MS * delta, 0, TENSION_MAX);
     this.drawTensionBar();
+
+    if (this.tension >= TENSION_MAX) {
+      this.resolve(ESCAPE_MESSAGE);
+    }
   }
 
   private createTensionBar(x: number, top: number): void {
@@ -176,6 +193,8 @@ export class ReelingScene extends Phaser.Scene {
   }
 
   private handlePadPress(key: PadKey): void {
+    if (this.isResolved) return;
+
     if (key.action === "digit") {
       if (this.answer.length < MAX_ANSWER_LENGTH) {
         this.answer += String(key.digit);
@@ -190,26 +209,47 @@ export class ReelingScene extends Phaser.Scene {
   }
 
   private submitAnswer(): void {
-    if (this.answer.length === 0) return;
+    if (this.isResolved || this.answer.length === 0) return;
 
     const isCorrect = Number(this.answer) === HARDCODED_PROBLEM.answer;
 
     if (isCorrect) {
       this.tension = Phaser.Math.Clamp(this.tension - TENSION_DROP_ON_CORRECT, 0, TENSION_MAX);
+      this.correctCount++;
       this.feedbackText.setText("Correct!");
-      this.time.delayedCall(800, () => this.finish());
+
+      if (this.correctCount >= CORRECT_TO_CATCH) {
+        this.time.delayedCall(800, () => this.resolve("Caught it!"));
+      } else {
+        this.time.delayedCall(800, () => this.resetForNextAttempt());
+      }
     } else {
       this.tension = Phaser.Math.Clamp(this.tension + TENSION_SPIKE_ON_WRONG, 0, TENSION_MAX);
+      this.wrongCount++;
       this.feedbackText.setText("Not quite — try again!");
-      this.time.delayedCall(600, () => {
-        this.answer = "";
-        this.answerText.setText("_");
-        this.feedbackText.setText("");
-      });
+
+      if (this.wrongCount >= WRONG_TO_ESCAPE) {
+        this.time.delayedCall(600, () => this.resolve(ESCAPE_MESSAGE));
+      } else {
+        this.time.delayedCall(600, () => this.resetForNextAttempt());
+      }
     }
   }
 
-  private finish(): void {
+  private resetForNextAttempt(): void {
+    this.answer = "";
+    this.answerText.setText("_");
+    this.feedbackText.setText("");
+  }
+
+  private resolve(message: string): void {
+    if (this.isResolved) return;
+    this.isResolved = true;
+    this.feedbackText.setText(message);
+    this.time.delayedCall(1000, () => this.returnToPond());
+  }
+
+  private returnToPond(): void {
     const pond = this.scene.get("PondScene") as PondScene;
     this.scene.stop();
     this.scene.resume("PondScene");
